@@ -2,6 +2,7 @@
 import React from 'react';
 import Header from '@/components/Header';
 import MiningRig from '@/components/MiningRig';
+import GoogleAd from '@/components/GoogleAd';
 import { useGame } from '@/context/GameContext';
 import { HardDrive } from 'lucide-react';
 
@@ -16,6 +17,11 @@ const Garage = () => {
         <div className="flex items-center mb-6">
           <HardDrive className="w-6 h-6 mr-2 text-gray-700" />
           <h1 className="text-2xl font-bold">Mining Garage</h1>
+        </div>
+        
+        {/* Top ad slot */}
+        <div className="mb-6">
+          <GoogleAd slot="2345678901" format="rectangle" className="mx-auto max-w-md" />
         </div>
         
         <div className="glass-panel rounded-xl p-4 mb-6">
@@ -42,6 +48,11 @@ const Garage = () => {
           ))}
         </div>
         
+        {/* Middle ad slot */}
+        <div className="my-6">
+          <GoogleAd slot="3456789012" format="rectangle" className="mx-auto max-w-md" />
+        </div>
+        
         <div className="mt-8 glass-panel rounded-xl p-4">
           <h3 className="text-lg font-medium mb-2">Mining Tips</h3>
           <ul className="text-sm text-gray-600 space-y-2">
@@ -50,6 +61,11 @@ const Garage = () => {
             <li>• You can have multiple of the same rig</li>
             <li>• Mining continues even when you're not active</li>
           </ul>
+        </div>
+        
+        {/* Bottom ad slot */}
+        <div className="mt-8">
+          <GoogleAd slot="4567890123" format="rectangle" className="mx-auto max-w-md" />
         </div>
       </div>
     </div>

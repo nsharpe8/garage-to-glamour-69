@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import BitcoinVisual from '@/components/BitcoinVisual';
+import GoogleAd from '@/components/GoogleAd';
 import { useGame } from '@/context/GameContext';
 import { HardDrive, Wallet, ChevronsUp, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -37,6 +38,11 @@ const Index = () => {
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold mb-1">Bitcoin Miner</h1>
           <p className="text-gray-600">From Garage to Glamour</p>
+        </div>
+
+        {/* Top ad slot - before main content */}
+        <div className="mb-6">
+          <GoogleAd slot="1234567890" format="rectangle" className="mx-auto max-w-md" />
         </div>
 
         <BitcoinVisual />
@@ -100,6 +106,11 @@ const Index = () => {
             <div className="font-medium">Browse Store</div>
             <ArrowRight className="w-5 h-5" />
           </button>
+        </div>
+        
+        {/* Bottom ad slot - after main content */}
+        <div className="mt-8">
+          <GoogleAd slot="0987654321" format="rectangle" className="mx-auto max-w-md" />
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@
 import React from 'react';
 import Header from '@/components/Header';
 import AssetCard from '@/components/AssetCard';
+import GoogleAd from '@/components/GoogleAd';
 import { useGame } from '@/context/GameContext';
 import { User, ChevronsUp, Trophy, Bitcoin } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,11 @@ const Profile = () => {
         <div className="flex items-center mb-6">
           <User className="w-6 h-6 mr-2 text-gray-700" />
           <h1 className="text-2xl font-bold">Profile</h1>
+        </div>
+        
+        {/* Top ad slot */}
+        <div className="mb-6">
+          <GoogleAd slot="7890123456" format="rectangle" className="mx-auto max-w-md" />
         </div>
         
         <div className="glass-panel rounded-xl p-6 mb-6">
@@ -74,13 +80,18 @@ const Profile = () => {
             ))}
           </div>
         ) : (
-          <div className="glass-panel rounded-xl p-6 text-center">
+          <div className="glass-panel rounded-xl p-6 text-center mb-6">
             <p className="text-gray-500">You don't own any assets yet.</p>
             <p className="text-gray-500 text-sm mt-2">
               Visit the store to purchase homes, cars, watches, and vacations.
             </p>
           </div>
         )}
+        
+        {/* Bottom ad slot */}
+        <div className="mt-8">
+          <GoogleAd slot="8901234567" format="rectangle" className="mx-auto max-w-md" />
+        </div>
       </div>
     </div>
   );

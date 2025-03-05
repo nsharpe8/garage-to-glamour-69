@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import StoreItem from '@/components/StoreItem';
+import GoogleAd from '@/components/GoogleAd';
 import { useGame } from '@/context/GameContext';
 import { ShoppingCart, Home, Car, Watch, Plane } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,11 @@ const Store = () => {
         <div className="flex items-center mb-6">
           <ShoppingCart className="w-6 h-6 mr-2 text-gray-700" />
           <h1 className="text-2xl font-bold">Luxury Store</h1>
+        </div>
+
+        {/* Top ad slot - before category tabs */}
+        <div className="mb-6">
+          <GoogleAd slot="5678901234" format="rectangle" className="mx-auto max-w-md" />
         </div>
         
         <div className="mb-6 overflow-x-auto pb-2">
@@ -72,6 +78,11 @@ const Store = () => {
             <p className="text-gray-500">No items found in this category.</p>
           </div>
         )}
+        
+        {/* Bottom ad slot - after store items */}
+        <div className="mt-8">
+          <GoogleAd slot="6789012345" format="rectangle" className="mx-auto max-w-md" />
+        </div>
       </div>
     </div>
   );
