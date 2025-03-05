@@ -17,19 +17,14 @@ const GoogleAd: React.FC<GoogleAdProps> = ({
   const adRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // This would typically load/refresh the ad
-    // For production, you would need to include the Google AdSense script in index.html
-    // and use window.adsbygoogle to push ads
-    
+    // Load ads when the component mounts
     try {
-      if (adRef.current && (window as any).adsbygoogle) {
-        (window as any).adsbygoogle = (window as any).adsbygoogle || [];
-        (window as any).adsbygoogle.push({});
-      }
+      const adsbygoogle = (window as any).adsbygoogle || [];
+      adsbygoogle.push({});
     } catch (error) {
       console.error('Error loading Google ad:', error);
     }
-  }, [slot]);
+  }, []);
 
   return (
     <div className={`ad-container ${className}`} ref={adRef}>
