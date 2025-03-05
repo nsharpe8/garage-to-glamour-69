@@ -2,7 +2,7 @@
 import React from 'react';
 import { useGame } from '@/context/GameContext';
 import { cn } from '@/lib/utils';
-import { Car, Home, Watch, Plane } from 'lucide-react';
+import { Car, Home, Watch, Plane, Crown } from 'lucide-react';
 
 interface StoreItemProps {
   assetId: number;
@@ -32,6 +32,8 @@ const StoreItem: React.FC<StoreItemProps> = ({ assetId }) => {
         return <Watch className="w-5 h-5" />;
       case 'vacation':
         return <Plane className="w-5 h-5" />;
+      case 'luxury':
+        return <Crown className="w-5 h-5" />;
       default:
         return null;
     }

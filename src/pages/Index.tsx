@@ -4,8 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import BitcoinVisual from '@/components/BitcoinVisual';
 import GoogleAd from '@/components/GoogleAd';
+import Leaderboard from '@/components/Leaderboard';
+import RandomEvent from '@/components/RandomEvent';
+import MiniGame from '@/components/MiniGame';
 import { useGame } from '@/context/GameContext';
-import { HardDrive, Wallet, ChevronsUp, ArrowRight } from 'lucide-react';
+import { HardDrive, Wallet, ChevronsUp, ArrowRight, Sparkles, Gamepad2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const BITCOIN_PRICE = 30000; // $30,000 per BTC
@@ -45,6 +48,15 @@ const Index = () => {
           <GoogleAd slot="1234567890" format="rectangle" className="mx-auto max-w-md" />
         </div>
 
+        {/* Active Events Section */}
+        {state.activeEvents.length > 0 && (
+          <div className="mb-6 space-y-2">
+            {state.activeEvents.map(event => (
+              <RandomEvent key={event.id} eventId={event.id} />
+            ))}
+          </div>
+        )}
+
         <BitcoinVisual />
 
         <div className="mt-8 space-y-4">
@@ -81,6 +93,7 @@ const Index = () => {
             </button>
           </div>
 
+          {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-4">
             <StatsCard
               title="Mining Power"
@@ -98,6 +111,36 @@ const Index = () => {
               subtext={`${state.experience}/${state.level * 10} XP`}
             />
           </div>
+
+          {/* Mini Games Section */}
+          <div className="mt-6">
+            <div className="flex items-center mb-4">
+              <Gamepad2 className="w-5 h-5 mr-2 text-gray-700" />
+              <h2 className="text-lg font-medium">Mini Games</h2>
+            </div>
+            
+            <div className="space-y-4">
+              {state.miniGames
+                .filter(game => game.id <= state.level + 1) // Only show games unlocked based on level
+                .map(game => (
+                  <MiniGame key={game.id} gameId={game.id} />
+                ))}
+            </div>
+          </div>
+
+          {/* Random Events Section */}
+          <div className="glass-panel rounded-xl p-4 mt-6">
+            <div className="flex items-center mb-2">
+              <Sparkles className="w-5 h-5 mr-2 text-amber-500" />
+              <h2 className="text-lg font-medium">Random Events</h2>
+            </div>
+            <p className="text-sm text-gray-600">
+              Events randomly occur while you play. They can boost your mining or give you other bonuses!
+            </p>
+          </div>
+
+          {/* Richest Person Leaderboard */}
+          <Leaderboard limit={5} />
 
           <button
             onClick={() => navigate('/store')}

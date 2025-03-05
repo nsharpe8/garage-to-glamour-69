@@ -1,5 +1,5 @@
-
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { toast } from "@/components/ui/use-toast";
 
 // Types
 export interface MiningRig {
@@ -15,10 +15,37 @@ export interface MiningRig {
 export interface Asset {
   id: number;
   name: string;
-  category: 'home' | 'car' | 'watch' | 'vacation';
+  category: 'home' | 'car' | 'watch' | 'vacation' | 'luxury';
   price: number;
   image: string;
   owned: boolean;
+}
+
+export interface LeaderboardEntry {
+  id: number;
+  name: string;
+  worth: number;
+  isPlayer: boolean;
+}
+
+export interface RandomEvent {
+  id: number;
+  title: string;
+  description: string;
+  type: 'positive' | 'negative' | 'neutral';
+  effect: 'bitcoin' | 'cash' | 'hashrate' | 'experience';
+  value: number;
+  duration?: number; // in seconds, for temporary effects
+}
+
+export interface MiniGame {
+  id: number;
+  name: string;
+  description: string;
+  unlocked: boolean;
+  played: boolean;
+  cooldown: number; // in seconds
+  lastPlayed: number; // timestamp
 }
 
 export interface GameState {
@@ -31,6 +58,11 @@ export interface GameState {
   experience: number;
   lastMined: number;
   isFirstVisit: boolean;
+  leaderboard: LeaderboardEntry[];
+  playerRank: number;
+  activeEvents: RandomEvent[];
+  miniGames: MiniGame[];
+  lastEventTime: number;
 }
 
 type GameAction =
@@ -41,7 +73,11 @@ type GameAction =
   | { type: 'BUY_ASSET'; payload: number }
   | { type: 'SELL_BITCOIN'; payload: number }
   | { type: 'COLLECT_PASSIVE_INCOME' }
-  | { type: 'DISMISS_FIRST_VISIT' };
+  | { type: 'DISMISS_FIRST_VISIT' }
+  | { type: 'TRIGGER_RANDOM_EVENT' }
+  | { type: 'RESOLVE_EVENT'; payload: number }
+  | { type: 'PLAY_MINI_GAME'; payload: { gameId: number; reward: number } }
+  | { type: 'UPDATE_LEADERBOARD' };
 
 const initialRigs: MiningRig[] = [
   {
@@ -147,6 +183,127 @@ const initialAssets: Asset[] = [
     image: 'exotic-vacation',
     owned: false,
   },
+  {
+    id: 9,
+    name: 'Mansion',
+    category: 'home',
+    price: 2000000,
+    image: 'mansion',
+    owned: false,
+  },
+  {
+    id: 10,
+    name: 'Luxury Yacht',
+    category: 'luxury',
+    price: 5000000,
+    image: 'yacht',
+    owned: false,
+  },
+  {
+    id: 11,
+    name: 'Private Jet',
+    category: 'luxury',
+    price: 20000000,
+    image: 'private-jet',
+    owned: false,
+  },
+  {
+    id: 12,
+    name: 'Island Retreat',
+    category: 'luxury',
+    price: 50000000,
+    image: 'island',
+    owned: false,
+  },
+];
+
+const initialRandomEvents: RandomEvent[] = [
+  {
+    id: 1,
+    title: 'Market Surge',
+    description: 'Bitcoin price has surged! Sell now for a 20% bonus!',
+    type: 'positive',
+    effect: 'bitcoin',
+    value: 0.2, // 20% increase
+  },
+  {
+    id: 2,
+    title: 'Power Outage',
+    description: 'A local power outage has slowed your mining operations by 30% for 30 seconds.',
+    type: 'negative',
+    effect: 'hashrate',
+    value: -0.3, // 30% decrease
+    duration: 30,
+  },
+  {
+    id: 3,
+    title: 'Cooling Optimization',
+    description: 'You optimized your cooling system! Mining efficiency increased by 25% for 45 seconds.',
+    type: 'positive',
+    effect: 'hashrate',
+    value: 0.25, // 25% increase
+    duration: 45,
+  },
+  {
+    id: 4,
+    title: 'Mining Pool Bonus',
+    description: 'Your mining pool found a block! You received a small bonus.',
+    type: 'positive',
+    effect: 'bitcoin',
+    value: 0.001, // Fixed amount
+  },
+  {
+    id: 5,
+    title: 'New Mining Technique',
+    description: 'You learned a new technique! Gain 5 experience points.',
+    type: 'positive',
+    effect: 'experience',
+    value: 5,
+  },
+];
+
+const initialMiniGames: MiniGame[] = [
+  {
+    id: 1,
+    name: 'Hash Puzzle',
+    description: 'Solve a puzzle to earn Bitcoin.',
+    unlocked: true,
+    played: false,
+    cooldown: 300, // 5 minutes
+    lastPlayed: 0,
+  },
+  {
+    id: 2,
+    name: 'Crypto Trader',
+    description: 'Test your trading skills to earn cash.',
+    unlocked: false,
+    played: false,
+    cooldown: 600, // 10 minutes
+    lastPlayed: 0,
+  },
+  {
+    id: 3,
+    name: 'Network Defense',
+    description: 'Defend your mining operation from hackers.',
+    unlocked: false,
+    played: false,
+    cooldown: 900, // 15 minutes
+    lastPlayed: 0,
+  },
+];
+
+const initialLeaderboard: LeaderboardEntry[] = [
+  { id: 1, name: 'Elon Musk', worth: 250000000000, isPlayer: false },
+  { id: 2, name: 'Jeff Bezos', worth: 200000000000, isPlayer: false },
+  { id: 3, name: 'Bernard Arnault', worth: 190000000000, isPlayer: false },
+  { id: 4, name: 'Bill Gates', worth: 150000000000, isPlayer: false },
+  { id: 5, name: 'Mark Zuckerberg', worth: 120000000000, isPlayer: false },
+  { id: 6, name: 'Warren Buffett', worth: 110000000000, isPlayer: false },
+  { id: 7, name: 'Larry Ellison', worth: 100000000000, isPlayer: false },
+  { id: 8, name: 'Larry Page', worth: 90000000000, isPlayer: false },
+  { id: 9, name: 'Sergey Brin', worth: 85000000000, isPlayer: false },
+  { id: 10, name: 'Steve Ballmer', worth: 80000000000, isPlayer: false },
+  // Player will be inserted based on wealth
 ];
 
 const initialState: GameState = {
@@ -159,6 +316,11 @@ const initialState: GameState = {
   experience: 0,
   lastMined: Date.now(),
   isFirstVisit: true,
+  leaderboard: initialLeaderboard,
+  playerRank: initialLeaderboard.length + 1,
+  activeEvents: [],
+  miniGames: initialMiniGames,
+  lastEventTime: Date.now(),
 };
 
 const calculateTotalHashrate = (rigs: MiningRig[]): number => {
@@ -180,7 +342,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       let experience = state.experience + 1;
       let level = state.level;
       
-      // Level up if enough experience
       if (experience >= state.level * 10) {
         level += 1;
         experience = 0;
@@ -244,7 +405,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       
       return {
         ...state,
-        cash: state.cash + (rig.price * 0.5), // Sell for half price
+        cash: state.cash + (rig.price * 0.5),
         miningRigs: updatedRigs,
         hashrate: calculateTotalHashrate(updatedRigs),
       };
@@ -272,7 +433,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         cash: state.cash - asset.price,
         assets: updatedAssets,
-        experience: state.experience + 5, // Bonus experience for buying assets
+        experience: state.experience + 5,
       };
     }
     
@@ -309,28 +470,163 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       };
     }
     
+    case 'TRIGGER_RANDOM_EVENT': {
+      const now = Date.now();
+      if (now - state.lastEventTime < 120000) {
+        return state;
+      }
+
+      if (Math.random() > 0.25) {
+        return {
+          ...state,
+          lastEventTime: now,
+        };
+      }
+
+      const randomEvent = initialRandomEvents[Math.floor(Math.random() * initialRandomEvents.length)];
+      
+      const eventInstance = {
+        ...randomEvent,
+        id: randomEvent.id + now,
+      };
+
+      toast({
+        title: eventInstance.title,
+        description: eventInstance.description,
+        variant: eventInstance.type === 'positive' ? 'default' : 'destructive',
+      });
+
+      if (!eventInstance.duration) {
+        let newState = { ...state };
+        
+        switch (eventInstance.effect) {
+          case 'bitcoin':
+            if (eventInstance.value < 1) {
+              newState.bitcoin += state.bitcoin * eventInstance.value;
+            } else {
+              newState.bitcoin += eventInstance.value;
+            }
+            break;
+          case 'cash':
+            if (eventInstance.value < 1) {
+              newState.cash += state.cash * eventInstance.value;
+            } else {
+              newState.cash += eventInstance.value;
+            }
+            break;
+          case 'experience':
+            newState.experience += eventInstance.value;
+            if (newState.experience >= newState.level * 10) {
+              newState.level += 1;
+              newState.experience = 0;
+              toast({
+                title: "Level Up!",
+                description: `You reached level ${newState.level}!`,
+              });
+            }
+            break;
+        }
+        
+        return {
+          ...newState,
+          lastEventTime: now,
+        };
+      }
+      
+      return {
+        ...state,
+        activeEvents: [...state.activeEvents, eventInstance],
+        lastEventTime: now,
+      };
+    }
+    
+    case 'RESOLVE_EVENT': {
+      const eventId = action.payload;
+      const updatedEvents = state.activeEvents.filter(event => event.id !== eventId);
+      
+      return {
+        ...state,
+        activeEvents: updatedEvents,
+      };
+    }
+    
+    case 'PLAY_MINI_GAME': {
+      const { gameId, reward } = action.payload;
+      const now = Date.now();
+      
+      const updatedGames = state.miniGames.map(game => {
+        if (game.id === gameId) {
+          return {
+            ...game,
+            played: true,
+            lastPlayed: now,
+          };
+        }
+        return game;
+      });
+      
+      return {
+        ...state,
+        miniGames: updatedGames,
+        bitcoin: state.bitcoin + reward,
+        experience: state.experience + 2,
+      };
+    }
+    
+    case 'UPDATE_LEADERBOARD': {
+      const playerBitcoinValue = state.bitcoin * BITCOIN_VALUE;
+      const playerAssetsValue = state.assets
+        .filter(asset => asset.owned)
+        .reduce((sum, asset) => sum + asset.price, 0);
+      const playerNetWorth = state.cash + playerBitcoinValue + playerAssetsValue;
+      
+      const playerEntry: LeaderboardEntry = {
+        id: 0,
+        name: 'You',
+        worth: playerNetWorth,
+        isPlayer: true,
+      };
+      
+      const nonPlayerEntries = state.leaderboard.filter(entry => !entry.isPlayer);
+      
+      const combinedEntries = [...nonPlayerEntries, playerEntry]
+        .sort((a, b) => b.worth - a.worth);
+      
+      const playerRank = combinedEntries.findIndex(entry => entry.isPlayer) + 1;
+      
+      return {
+        ...state,
+        leaderboard: combinedEntries,
+        playerRank,
+      };
+    }
+    
     default:
       return state;
   }
 };
 
-// Create the context
 const GameContext = createContext<{
   state: GameState;
   dispatch: React.Dispatch<GameAction>;
   sellBitcoin: (amount: number) => void;
   formatBitcoin: (amount: number) => string;
   formatCash: (amount: number) => string;
+  triggerRandomEvent: () => void;
+  playMiniGame: (gameId: number, reward: number) => void;
+  updateLeaderboard: () => void;
 }>({
   state: initialState,
   dispatch: () => null,
   sellBitcoin: () => null,
   formatBitcoin: () => '',
   formatCash: () => '',
+  triggerRandomEvent: () => null,
+  playMiniGame: () => null,
+  updateLeaderboard: () => null,
 });
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Try to load state from localStorage
   const loadState = (): GameState => {
     try {
       const savedState = localStorage.getItem('bitcoinMinerGameState');
@@ -343,7 +639,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [state, dispatch] = useReducer(gameReducer, loadState());
 
-  // Save state to localStorage whenever it changes
   useEffect(() => {
     try {
       localStorage.setItem('bitcoinMinerGameState', JSON.stringify(state));
@@ -352,16 +647,28 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [state]);
 
-  // Passive mining when app is open
   useEffect(() => {
     const interval = setInterval(() => {
       dispatch({ type: 'COLLECT_PASSIVE_INCOME' });
+      dispatch({ type: 'TRIGGER_RANDOM_EVENT' });
+      dispatch({ type: 'UPDATE_LEADERBOARD' });
+      
+      const now = Date.now();
+      state.activeEvents.forEach(event => {
+        if (event.duration) {
+          const eventStartTime = event.id - event.id % 1000;
+          const eventEndTime = eventStartTime + (event.duration * 1000);
+          
+          if (now >= eventEndTime) {
+            dispatch({ type: 'RESOLVE_EVENT', payload: event.id });
+          }
+        }
+      });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [state.activeEvents]);
 
-  // Helper functions
   const sellBitcoin = (amount: number) => {
     dispatch({ type: 'SELL_BITCOIN', payload: amount });
   };
@@ -377,8 +684,29 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }).format(amount);
   };
 
+  const triggerRandomEvent = () => {
+    dispatch({ type: 'TRIGGER_RANDOM_EVENT' });
+  };
+
+  const playMiniGame = (gameId: number, reward: number) => {
+    dispatch({ type: 'PLAY_MINI_GAME', payload: { gameId, reward } });
+  };
+
+  const updateLeaderboard = () => {
+    dispatch({ type: 'UPDATE_LEADERBOARD' });
+  };
+
   return (
-    <GameContext.Provider value={{ state, dispatch, sellBitcoin, formatBitcoin, formatCash }}>
+    <GameContext.Provider value={{ 
+      state, 
+      dispatch, 
+      sellBitcoin, 
+      formatBitcoin, 
+      formatCash, 
+      triggerRandomEvent,
+      playMiniGame,
+      updateLeaderboard
+    }}>
       {children}
     </GameContext.Provider>
   );

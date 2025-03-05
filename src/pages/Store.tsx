@@ -4,10 +4,10 @@ import Header from '@/components/Header';
 import StoreItem from '@/components/StoreItem';
 import GoogleAd from '@/components/GoogleAd';
 import { useGame } from '@/context/GameContext';
-import { ShoppingCart, Home, Car, Watch, Plane } from 'lucide-react';
+import { ShoppingCart, Home, Car, Watch, Plane, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type Category = 'all' | 'home' | 'car' | 'watch' | 'vacation';
+type Category = 'all' | 'home' | 'car' | 'watch' | 'vacation' | 'luxury';
 
 const Store = () => {
   const { state } = useGame();
@@ -63,6 +63,12 @@ const Store = () => {
               icon={<Plane className="w-4 h-4" />} 
               isActive={activeCategory === 'vacation'} 
               onClick={() => setActiveCategory('vacation')} 
+            />
+            <CategoryTab 
+              label="Luxury" 
+              icon={<Crown className="w-4 h-4" />} 
+              isActive={activeCategory === 'luxury'} 
+              onClick={() => setActiveCategory('luxury')} 
             />
           </div>
         </div>

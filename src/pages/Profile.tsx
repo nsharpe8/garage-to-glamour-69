@@ -3,8 +3,9 @@ import React from 'react';
 import Header from '@/components/Header';
 import AssetCard from '@/components/AssetCard';
 import GoogleAd from '@/components/GoogleAd';
+import Leaderboard from '@/components/Leaderboard';
 import { useGame } from '@/context/GameContext';
-import { User, ChevronsUp, Trophy, Bitcoin } from 'lucide-react';
+import { User, ChevronsUp, Trophy, Bitcoin, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Profile = () => {
@@ -69,6 +70,30 @@ const Profile = () => {
             icon={<Bitcoin className="w-5 h-5 text-bitcoin" />}
             color="bitcoin"
           />
+        </div>
+
+        {/* World Ranking Card */}
+        <div className="mb-6 glass-panel rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Award className="w-5 h-5 text-amber-500 mr-2" />
+              <h3 className="font-medium">World Ranking</h3>
+            </div>
+            <div className="text-xl font-bold">
+              #{state.playerRank}
+            </div>
+          </div>
+          <div className="mt-2 text-sm text-gray-600">
+            {state.playerRank <= 10 
+              ? "You're among the world's wealthiest individuals!"
+              : "Keep mining and buying assets to climb the rankings!"
+            }
+          </div>
+        </div>
+        
+        {/* Leaderboard */}
+        <div className="mb-6">
+          <Leaderboard />
         </div>
         
         <h2 className="text-lg font-medium mb-4">Your Assets</h2>

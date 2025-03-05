@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Car, Home, Watch, Plane } from 'lucide-react';
+import { Car, Home, Watch, Plane, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGame } from '@/context/GameContext';
 
@@ -24,6 +24,8 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetId }) => {
         return <Watch className="w-6 h-6" />;
       case 'vacation':
         return <Plane className="w-6 h-6" />;
+      case 'luxury':
+        return <Crown className="w-6 h-6" />;
       default:
         return null;
     }
@@ -39,6 +41,8 @@ const AssetCard: React.FC<AssetCardProps> = ({ assetId }) => {
         return 'from-purple-400/20 to-purple-600/20 text-purple-600';
       case 'vacation':
         return 'from-green-400/20 to-green-600/20 text-green-600';
+      case 'luxury':
+        return 'from-amber-400/20 to-amber-600/20 text-amber-600';
       default:
         return 'from-gray-200 to-gray-300 text-gray-600';
     }

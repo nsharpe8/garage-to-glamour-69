@@ -32,7 +32,7 @@ const GoogleAd: React.FC<GoogleAdProps> = ({
   }, [slot]);
 
   return (
-    <div className={`ad-container ${className}`}>
+    <div className={`ad-container ${className}`} ref={adRef}>
       <ins
         className="adsbygoogle"
         style={{ display: 'block' }}
@@ -40,7 +40,6 @@ const GoogleAd: React.FC<GoogleAdProps> = ({
         data-ad-slot={slot}
         data-ad-format={format}
         data-full-width-responsive={responsive ? 'true' : 'false'}
-        ref={adRef}
       />
       <div className="text-xs text-gray-400 text-center mt-1">Advertisement</div>
     </div>
