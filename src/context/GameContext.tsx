@@ -1,9 +1,10 @@
 
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { gameReducer } from '@/reducers/gameReducer';
 import { formatBitcoin, formatCash } from '@/utils/gameUtils';
 import { initialState } from '@/data/gameData';
 import { GameState } from '@/types/gameTypes';
+import { toast } from '@/components/ui/use-toast';
 
 type GameContextType = {
   state: GameState;
@@ -11,12 +12,39 @@ type GameContextType = {
   formatBitcoin: (value: number) => string;
   formatCash: (value: number) => string;
   playMiniGame: (gameId: number, reward: number) => void;
+  hashrateBoost: number;
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+  const [previousHashrate, setPreviousHashrate] = useState(state.hashrate);
+  const [hashrateBoost, setHashrateBoost] = useState(0);
+
+  // Detect hashrate changes and show notifications/animations
+  useEffect(() => {
+    if (state.hashrate > previousHashrate && previousHashrate > 0) {
+      const increase = state.hashrate - previousHashrate;
+      
+      // Show toast notification for significant hashrate increases
+      if (increase >= 5) {
+        toast({
+          title: "Mining Power Increased!",
+          description: `+${increase} H/s added to your mining operation.`,
+          variant: "default",
+        });
+      }
+      
+      // Set a temporary boost effect that will fade out
+      setHashrateBoost(increase);
+      setTimeout(() => {
+        setHashrateBoost(0);
+      }, 3000);
+    }
+    
+    setPreviousHashrate(state.hashrate);
+  }, [state.hashrate, previousHashrate]);
 
   // Passive mining effect - runs every second
   useEffect(() => {
@@ -67,7 +95,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch, 
       formatBitcoin, 
       formatCash,
-      playMiniGame
+      playMiniGame,
+      hashrateBoost
     }}>
       {children}
     </GameContext.Provider>

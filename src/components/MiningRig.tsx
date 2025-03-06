@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useGame } from '@/context/GameContext';
-import { HardDrive, Plus, Minus } from 'lucide-react';
+import { HardDrive, Plus, Minus, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MiningRigProps {
@@ -9,7 +9,7 @@ interface MiningRigProps {
 }
 
 const MiningRig: React.FC<MiningRigProps> = ({ rigId }) => {
-  const { state, dispatch, formatCash } = useGame();
+  const { state, dispatch, formatCash, hashrateBoost } = useGame();
   const rig = state.miningRigs.find(r => r.id === rigId);
   
   if (!rig) return null;
@@ -36,27 +36,43 @@ const MiningRig: React.FC<MiningRigProps> = ({ rigId }) => {
     return 'text-bitcoin';
   };
   
+  // Recently purchased rig gets a highlight effect
+  const isRecentlyBoosted = hashrateBoost > 0 && rig.hashrate === hashrateBoost;
+  
   return (
     <div className={cn(
       "glass-panel rounded-xl p-4 transition-all duration-300 overflow-hidden",
-      rig.owned ? "border-bitcoin/30" : "border-gray-200"
+      isRecentlyBoosted ? "border-yellow-400 shadow-[0_0_15px_rgba(255,186,8,0.5)]" : 
+      rig.owned ? "border-bitcoin/30" : "border-gray-200",
+      isRecentlyBoosted && "animate-pulse"
     )}>
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <div className={cn(
             "w-10 h-10 rounded-lg flex items-center justify-center",
+            isRecentlyBoosted ? "bg-yellow-400/20" :
             rig.owned ? "bg-bitcoin/10" : "bg-gray-100"
           )}>
-            <HardDrive className={cn(
-              "w-5 h-5",
-              rig.owned ? "text-bitcoin" : "text-gray-400"
-            )} />
+            {isRecentlyBoosted ? (
+              <Zap className="w-5 h-5 text-yellow-400" />
+            ) : (
+              <HardDrive className={cn(
+                "w-5 h-5",
+                rig.owned ? "text-bitcoin" : "text-gray-400"
+              )} />
+            )}
           </div>
           <div className="ml-3">
             <h3 className="font-medium text-base">{rig.name}</h3>
             <div className="flex space-x-4 text-xs mt-1">
-              <span className={cn("font-semibold", getHashrateColor(rig.hashrate))}>
+              <span className={cn(
+                "font-semibold", 
+                isRecentlyBoosted ? "text-yellow-500" : getHashrateColor(rig.hashrate)
+              )}>
                 {rig.hashrate} H/s
+                {isRecentlyBoosted && (
+                  <span className="inline-block ml-1 animate-pulse">⚡</span>
+                )}
               </span>
               <span className="text-gray-500">
                 {rig.power}W
@@ -66,7 +82,10 @@ const MiningRig: React.FC<MiningRigProps> = ({ rigId }) => {
         </div>
         
         {rig.owned && (
-          <div className="text-lg font-semibold">
+          <div className={cn(
+            "text-lg font-semibold",
+            isRecentlyBoosted && "text-yellow-500"
+          )}>
             x{rig.quantity}
           </div>
         )}
