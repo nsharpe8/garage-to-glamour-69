@@ -3,7 +3,7 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { gameReducer } from '@/reducers/gameReducer';
 import { formatBitcoin, formatCash } from '@/utils/gameUtils';
 import { initialState } from '@/data/gameData';
-import { GameState, MiniGame } from '@/types/gameTypes';
+import { GameState } from '@/types/gameTypes';
 
 type GameContextType = {
   state: GameState;

@@ -192,27 +192,27 @@ export const initialMiniGames: MiniGame[] = [
     id: 1,
     name: 'Hash Puzzle',
     description: 'Solve a puzzle to earn Bitcoin.',
-    unlocked: true,
+    unlocked: true, // First game is unlocked by default
     played: false,
-    cooldown: 300, // 5 minutes
+    cooldown: 60, // 1 minute for testing (was 300)
     lastPlayed: 0,
   },
   {
     id: 2,
     name: 'Crypto Trader',
     description: 'Test your trading skills to earn cash.',
-    unlocked: false,
+    unlocked: false, // Unlocks at level 3
     played: false,
-    cooldown: 600, // 10 minutes
+    cooldown: 120, // 2 minutes for testing (was 600)
     lastPlayed: 0,
   },
   {
     id: 3,
     name: 'Network Defense',
     description: 'Defend your mining operation from hackers.',
-    unlocked: false,
+    unlocked: false, // Unlocks at level 5
     played: false,
-    cooldown: 900, // 15 minutes
+    cooldown: 180, // 3 minutes for testing (was 900)
     lastPlayed: 0,
   },
 ];

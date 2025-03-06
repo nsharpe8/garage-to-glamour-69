@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Gamepad2, Clock, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from "@/components/ui/use-toast";
 
 interface MiniGameProps {
   gameId: number;
@@ -12,6 +13,7 @@ const MiniGame: React.FC<MiniGameProps> = ({ gameId }) => {
   const { state, playMiniGame, formatBitcoin } = useGame();
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [earnedReward, setEarnedReward] = useState(0);
   
   const game = state.miniGames.find(g => g.id === gameId);
   
@@ -31,7 +33,13 @@ const MiniGame: React.FC<MiniGameProps> = ({ gameId }) => {
     
     // Simulate game play (in a real implementation, this would be a proper game)
     setTimeout(() => {
-      const reward = 0.0001 + (Math.random() * 0.0005); // Random reward between 0.0001 and 0.0006 BTC
+      // Random reward between 0.0001 and 0.0006 BTC, scaled by level
+      const baseBTC = 0.0001;
+      const randomBonus = Math.random() * 0.0005;
+      const levelMultiplier = 1 + (state.level * 0.1); // 10% increase per level
+      const reward = (baseBTC + randomBonus) * levelMultiplier;
+      
+      setEarnedReward(reward);
       playMiniGame(gameId, reward);
       setGameCompleted(true);
       
@@ -75,7 +83,7 @@ const MiniGame: React.FC<MiniGameProps> = ({ gameId }) => {
         <div className="h-10 flex items-center justify-center">
           {gameCompleted ? (
             <div className="text-green-600 font-medium">
-              You earned {formatBitcoin(0.0005)} BTC!
+              You earned {formatBitcoin(earnedReward)} BTC!
             </div>
           ) : (
             <div className="animate-pulse">Playing...</div>

@@ -1,10 +1,9 @@
-
 import { GameState, GameAction } from '../types/gameTypes';
 import { calculateTotalHashrate } from '../utils/gameUtils';
 import { BITCOIN_VALUE, MINING_RATE, initialRandomEvents } from '../data/gameData';
 import { toast } from "@/components/ui/use-toast";
 
-const gameReducer = (state: GameState, action: GameAction): GameState => {
+export const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
     case 'MINE_BITCOIN': {
       const now = Date.now();
@@ -17,6 +16,27 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       if (experience >= state.level * 10) {
         level += 1;
         experience = 0;
+        
+        const updatedMiniGames = state.miniGames.map(game => {
+          if (game.id <= level && !game.unlocked) {
+            return { ...game, unlocked: true };
+          }
+          return game;
+        });
+        
+        toast({
+          title: "Level Up!",
+          description: `You reached level ${level}!`,
+        });
+        
+        return {
+          ...state,
+          bitcoin: state.bitcoin + minedBitcoin,
+          lastMined: now,
+          level,
+          experience,
+          miniGames: updatedMiniGames
+        };
       }
       
       return {
@@ -128,10 +148,40 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const elapsedSeconds = (now - state.lastMined) / 1000;
       const minedBitcoin = state.hashrate * MINING_RATE * elapsedSeconds;
       
+      let experience = state.experience + (elapsedSeconds * 0.01);
+      let level = state.level;
+      
+      if (experience >= state.level * 10) {
+        level += 1;
+        experience = 0;
+        
+        const updatedMiniGames = state.miniGames.map(game => {
+          if (game.id <= level && !game.unlocked) {
+            return { ...game, unlocked: true };
+          }
+          return game;
+        });
+        
+        toast({
+          title: "Level Up!",
+          description: `You reached level ${level}!`,
+        });
+        
+        return {
+          ...state,
+          bitcoin: state.bitcoin + minedBitcoin,
+          lastMined: now,
+          level,
+          experience,
+          miniGames: updatedMiniGames
+        };
+      }
+      
       return {
         ...state,
         bitcoin: state.bitcoin + minedBitcoin,
         lastMined: now,
+        experience,
       };
     }
     
@@ -226,22 +276,71 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const { gameId, reward } = action.payload;
       const now = Date.now();
       
-      const updatedGames = state.miniGames.map(game => {
-        if (game.id === gameId) {
+      const game = state.miniGames.find(g => g.id === gameId);
+      if (!game || !game.unlocked) {
+        return state;
+      }
+      
+      let experience = state.experience + 2;
+      let level = state.level;
+      
+      if (experience >= state.level * 10) {
+        level += 1;
+        experience = 0;
+        
+        const updatedMiniGames = state.miniGames.map(game => {
+          if (game.id <= level && !game.unlocked) {
+            return { ...game, unlocked: true };
+          }
+          return game;
+        });
+        
+        toast({
+          title: "Level Up!",
+          description: `You reached level ${level}!`,
+        });
+        
+        const finalMiniGames = updatedMiniGames.map(g => {
+          if (g.id === gameId) {
+            return {
+              ...g,
+              played: true,
+              lastPlayed: now,
+            };
+          }
+          return g;
+        });
+        
+        return {
+          ...state,
+          miniGames: finalMiniGames,
+          bitcoin: state.bitcoin + reward,
+          level,
+          experience,
+        };
+      }
+      
+      const updatedGames = state.miniGames.map(g => {
+        if (g.id === gameId) {
           return {
-            ...game,
+            ...g,
             played: true,
             lastPlayed: now,
           };
         }
-        return game;
+        return g;
+      });
+      
+      toast({
+        title: "Mini Game Completed!",
+        description: `You earned ${reward.toFixed(8)} BTC!`,
       });
       
       return {
         ...state,
         miniGames: updatedGames,
         bitcoin: state.bitcoin + reward,
-        experience: state.experience + 2,
+        experience,
       };
     }
     
