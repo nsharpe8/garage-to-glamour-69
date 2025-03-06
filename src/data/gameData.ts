@@ -1,8 +1,7 @@
-
 import { MiningRig, Asset, LeaderboardEntry, RandomEvent, MiniGame, GameState } from '../types/gameTypes';
 
 export const BITCOIN_VALUE = 30000; // $30,000 per BTC
-export const MINING_RATE = 0.00001; // BTC per hashrate per second
+export const MINING_RATE = 0.00002; // Doubled from 0.00001 - BTC per hashrate per second
 
 export const initialRigs: MiningRig[] = [
   {

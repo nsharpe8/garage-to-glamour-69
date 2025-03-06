@@ -11,6 +11,9 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       const elapsedSeconds = (now - state.lastMined) / 1000;
       const minedBitcoin = state.hashrate * MINING_RATE * elapsedSeconds;
       
+      // Double the click bonus (added 2x multiplier)
+      const clickBonus = 0.00002 * state.hashrate; 
+      
       let experience = state.experience + 1;
       let level = state.level;
       
@@ -32,7 +35,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         
         return {
           ...state,
-          bitcoin: state.bitcoin + minedBitcoin,
+          bitcoin: state.bitcoin + minedBitcoin + clickBonus,
           lastMined: now,
           level,
           experience,
@@ -42,7 +45,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       
       return {
         ...state,
-        bitcoin: state.bitcoin + minedBitcoin,
+        bitcoin: state.bitcoin + minedBitcoin + clickBonus,
         lastMined: now,
         level,
         experience,
