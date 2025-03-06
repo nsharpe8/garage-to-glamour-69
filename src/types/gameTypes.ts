@@ -69,6 +69,7 @@ export type GameAction =
   | { type: 'UPGRADE_RIG'; payload: number }
   | { type: 'BUY_ASSET'; payload: number }
   | { type: 'SELL_BITCOIN'; payload: number }
+  | { type: 'ADD_BITCOIN'; payload: number }
   | { type: 'COLLECT_PASSIVE_INCOME' }
   | { type: 'DISMISS_FIRST_VISIT' }
   | { type: 'TRIGGER_RANDOM_EVENT' }

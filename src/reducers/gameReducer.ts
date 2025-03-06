@@ -1,3 +1,4 @@
+
 import { GameState, GameAction } from '../types/gameTypes';
 import { calculateTotalHashrate } from '../utils/gameUtils';
 import { BITCOIN_VALUE, MINING_RATE, initialRandomEvents } from '../data/gameData';
@@ -140,6 +141,19 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         ...state,
         bitcoin: state.bitcoin - amount,
         cash: state.cash + (amount * BITCOIN_VALUE),
+      };
+    }
+    
+    case 'ADD_BITCOIN': {
+      const amount = action.payload;
+      
+      if (amount <= 0) {
+        return state;
+      }
+      
+      return {
+        ...state,
+        bitcoin: state.bitcoin + amount,
       };
     }
     

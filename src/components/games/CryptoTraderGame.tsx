@@ -17,10 +17,10 @@ interface PricePoint {
 }
 
 const CryptoTraderGame: React.FC<CryptoTraderGameProps> = ({ game }) => {
-  const { playMiniGame, formatBitcoin, formatCash, state } = useGame();
+  const { playMiniGame, formatBitcoin, formatCash, state, dispatch } = useGame();
   const [isPlaying, setIsPlaying] = useState(false);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const [earnedReward, setEarnedReward] = useState(0);
+  const [earnedProfit, setEarnedProfit] = useState(0);
   const [prices, setPrices] = useState<PricePoint[]>([]);
   const [currentPrice, setCurrentPrice] = useState(30000); // $30,000 starting price
   const [ownedBitcoin, setOwnedBitcoin] = useState(0);
@@ -36,13 +36,14 @@ const CryptoTraderGame: React.FC<CryptoTraderGameProps> = ({ game }) => {
   const isOnCooldown = now < cooldownEnds;
   const remainingCooldown = Math.ceil((cooldownEnds - now) / 1000);
   
-  // Generate new price every second based on volatility
+  // Generate new price every second based on increased volatility
   const updatePrice = () => {
-    const volatility = 0.03; // 3% price movement max
-    const changePercent = (Math.random() * volatility * 2) - volatility; // Between -3% and +3%
+    const volatility = 0.06; // Increased from 0.03 to 0.06 (6% price movement max)
+    const changePercent = (Math.random() * volatility * 2) - volatility; // Between -6% and +6%
     const newPrice = currentPrice * (1 + changePercent);
     
-    setCurrentPrice(Math.max(15000, Math.min(50000, newPrice))); // Price between $15k and $50k
+    // Wider price range: $10,000 to $60,000 (from $15,000 to $50,000)
+    setCurrentPrice(Math.max(10000, Math.min(60000, newPrice)));
     
     setPrices(prevPrices => [
       ...prevPrices, 
@@ -108,15 +109,33 @@ const CryptoTraderGame: React.FC<CryptoTraderGameProps> = ({ game }) => {
   const startGame = () => {
     if (isOnCooldown || isPlaying) return;
     
+    // Starting with player's actual Bitcoin and cash
+    const playerBitcoin = state.bitcoin;
+    
+    if (playerBitcoin < 0.05) {
+      toast({
+        title: "Not enough Bitcoin",
+        description: "You need at least 0.05 BTC to play the trading game",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Take 0.05 BTC from player to start the game
+    dispatch({ 
+      type: 'SELL_BITCOIN', 
+      payload: 0.05
+    });
+    
     setIsPlaying(true);
     setGameCompleted(false);
-    setEarnedReward(0);
+    setEarnedProfit(0);
     setTimeLeft(60);
-    setOwnedBitcoin(0);
-    setCash(10000);
+    setOwnedBitcoin(0.05); // Start with 0.05 BTC
+    setCash(0); // Start with no cash
     setCurrentPrice(30000);
     setPrices([{ value: 30000, timestamp: Date.now() }]);
-    setTransactions([]);
+    setTransactions([`Started with ${formatBitcoin(0.05)} BTC from your wallet`]);
     
     // Start price updates
     priceIntervalRef.current = window.setInterval(updatePrice, 1000);
@@ -154,24 +173,57 @@ const CryptoTraderGame: React.FC<CryptoTraderGameProps> = ({ game }) => {
     const bitcoinValue = ownedBitcoin * currentPrice;
     const portfolioValue = cash + bitcoinValue;
     
-    // Calculate reward
-    const profit = portfolioValue - 10000; // How much profit from initial $10k
-    const profitPercent = profit / 10000;
+    // Calculate profit (in BTC terms)
+    const initialInvestmentValue = 0.05 * 30000; // Initial 0.05 BTC at $30,000
+    const profitInUSD = portfolioValue - initialInvestmentValue;
+    const profitInBTC = profitInUSD / currentPrice;
     
     // Only reward if they made a profit
-    let reward = 0;
-    if (profit > 0) {
-      const baseBTC = 0.0001;
-      const bonusBTC = baseBTC * profitPercent * 10; // Scale by profit percentage
-      reward = Math.min(0.001, (baseBTC + bonusBTC) * (1 + (state.level * 0.1)));
+    if (profitInUSD > 0) {
+      // Return their initial 0.05 BTC plus any profit
+      const finalBitcoin = 0.05 + profitInBTC;
       
-      setEarnedReward(reward);
-      playMiniGame(game.id, reward);
-    } else {
+      setEarnedProfit(profitInBTC);
+      
+      // Add the bitcoin directly to the player's wallet
+      dispatch({ 
+        type: 'ADD_BITCOIN', 
+        payload: finalBitcoin
+      });
+      
+      // Record that they played the game
+      playMiniGame(game.id, 0); // No additional reward, just record the play
+      
       toast({
         title: "Trading Complete",
-        description: "You didn't make a profit this time. Try again later!",
+        description: `You made a profit of ${formatBitcoin(profitInBTC)} BTC!`,
       });
+    } else {
+      // They lost some or all of their initial investment
+      const remainingBTC = Math.max(0, 0.05 + profitInBTC);
+      
+      // Add whatever is left back to their wallet
+      if (remainingBTC > 0) {
+        dispatch({ 
+          type: 'ADD_BITCOIN', 
+          payload: remainingBTC
+        });
+        
+        toast({
+          title: "Trading Complete",
+          description: `You lost ${formatBitcoin(Math.abs(profitInBTC))} BTC. ${formatBitcoin(remainingBTC)} BTC returned to your wallet.`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Trading Complete",
+          description: "You lost all your invested Bitcoin!",
+          variant: "destructive"
+        });
+      }
+      
+      // Still record that they played the game
+      playMiniGame(game.id, 0);
     }
     
     setGameCompleted(true);
@@ -251,9 +303,9 @@ const CryptoTraderGame: React.FC<CryptoTraderGameProps> = ({ game }) => {
         <div>
           {gameCompleted ? (
             <div className="text-center py-2">
-              <div className="text-green-600 font-medium mb-2">
-                {earnedReward > 0 ? (
-                  <>You earned {formatBitcoin(earnedReward)} BTC!</>
+              <div className={`font-medium mb-2 ${earnedProfit > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {earnedProfit > 0 ? (
+                  <>You earned {formatBitcoin(earnedProfit)} BTC!</>
                 ) : (
                   <>Better luck next time!</>
                 )}
@@ -279,6 +331,7 @@ const CryptoTraderGame: React.FC<CryptoTraderGameProps> = ({ game }) => {
                   size="sm" 
                   onClick={buyBitcoin} 
                   className="bg-green-500 hover:bg-green-600"
+                  disabled={cash < currentPrice * 0.01}
                 >
                   Buy 0.01 BTC
                 </Button>
@@ -309,12 +362,20 @@ const CryptoTraderGame: React.FC<CryptoTraderGameProps> = ({ game }) => {
           )}
         </div>
       ) : (
-        <button
-          onClick={startGame}
-          className="w-full py-2 rounded-lg font-medium transition-all bg-bitcoin text-white hover:bg-bitcoin-dark"
-        >
-          Play Now
-        </button>
+        <div>
+          <p className="text-xs text-gray-600 mb-2">Requires 0.05 BTC to play</p>
+          <button
+            onClick={startGame}
+            disabled={state.bitcoin < 0.05}
+            className={`w-full py-2 rounded-lg font-medium transition-all ${
+              state.bitcoin < 0.05 
+                ? 'bg-gray-300 cursor-not-allowed' 
+                : 'bg-bitcoin text-white hover:bg-bitcoin-dark'
+            }`}
+          >
+            {state.bitcoin < 0.05 ? 'Not Enough BTC' : 'Play Now'}
+          </button>
+        </div>
       )}
     </div>
   );
