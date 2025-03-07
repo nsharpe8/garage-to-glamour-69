@@ -1,4 +1,4 @@
-import { MiningRig, Asset, LeaderboardEntry, RandomEvent, MiniGame, GameState } from '../types/gameTypes';
+import { MiningRig, Asset, LeaderboardEntry, RandomEvent, MiniGame, GameState, Quest, Achievement } from '../types/gameTypes';
 
 export const BITCOIN_VALUE = 30000; // $30,000 per BTC
 export const MINING_RATE = 0.00002; // Doubled from 0.00001 - BTC per hashrate per second
@@ -230,6 +230,142 @@ export const initialLeaderboard: LeaderboardEntry[] = [
   // Player will be inserted based on wealth
 ];
 
+export const initialQuests: Quest[] = [
+  {
+    id: 1,
+    name: "First Steps",
+    description: "Mine your first 0.001 BTC",
+    completed: false,
+    claimed: false,
+    reward: {
+      type: "bitcoin",
+      amount: 0.0005
+    },
+    progress: 0,
+    target: 0.001,
+    category: "mining"
+  },
+  {
+    id: 2,
+    name: "Game Master",
+    description: "Play all mini-games at least once",
+    completed: false,
+    claimed: false,
+    reward: {
+      type: "experience",
+      amount: 10
+    },
+    progress: 0,
+    target: 3,
+    category: "games"
+  },
+  {
+    id: 3,
+    name: "Virus Hunter",
+    description: "Destroy 50 viruses in Network Defense",
+    completed: false,
+    claimed: false,
+    reward: {
+      type: "bitcoin",
+      amount: 0.001
+    },
+    progress: 0,
+    target: 50,
+    category: "games"
+  },
+  {
+    id: 4,
+    name: "Rookie Investor",
+    description: "Buy your first mining rig",
+    completed: false,
+    claimed: false,
+    reward: {
+      type: "cash",
+      amount: 1000
+    },
+    progress: 0,
+    target: 1,
+    category: "collection"
+  },
+  {
+    id: 5,
+    name: "Daily Mining",
+    description: "Mine BTC 5 times today",
+    completed: false,
+    claimed: false,
+    reward: {
+      type: "bitcoin",
+      amount: 0.0008
+    },
+    progress: 0,
+    target: 5,
+    category: "daily"
+  }
+];
+
+export const initialAchievements: Achievement[] = [
+  {
+    id: 1,
+    name: "Welcome to Crypto",
+    description: "Start your Bitcoin mining journey",
+    unlocked: false,
+    reward: {
+      type: "experience",
+      amount: 5
+    },
+    icon: "🎉",
+    rarity: "common"
+  },
+  {
+    id: 2,
+    name: "First Million",
+    description: "Reach $1,000,000 net worth",
+    unlocked: false,
+    reward: {
+      type: "hashrate",
+      amount: 10
+    },
+    icon: "💰",
+    rarity: "rare"
+  },
+  {
+    id: 3,
+    name: "Defender",
+    description: "Score 500 points in Network Defense",
+    unlocked: false,
+    reward: {
+      type: "bitcoin",
+      amount: 0.01
+    },
+    icon: "🛡️",
+    rarity: "uncommon"
+  },
+  {
+    id: 4,
+    name: "Crypto Empire",
+    description: "Own all mining rigs",
+    unlocked: false,
+    reward: {
+      type: "hashrate",
+      amount: 20
+    },
+    icon: "🏭",
+    rarity: "epic"
+  },
+  {
+    id: 5,
+    name: "Whale Status",
+    description: "Own 1 BTC",
+    unlocked: false,
+    reward: {
+      type: "cash",
+      amount: 10000
+    },
+    icon: "🐋",
+    rarity: "legendary"
+  }
+];
+
 export const initialState: GameState = {
   bitcoin: 0,
   cash: 1000,
@@ -245,4 +381,7 @@ export const initialState: GameState = {
   activeEvents: [],
   miniGames: initialMiniGames,
   lastEventTime: Date.now(),
+  quests: initialQuests,
+  achievements: initialAchievements,
+  lastQuestReset: Date.now()
 };

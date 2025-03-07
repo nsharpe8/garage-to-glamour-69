@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -6,8 +7,9 @@ import GoogleAd from '@/components/GoogleAd';
 import Leaderboard from '@/components/Leaderboard';
 import RandomEvent from '@/components/RandomEvent';
 import MiniGame from '@/components/MiniGame';
+import QuestsAndAchievements from '@/components/QuestsAndAchievements';
 import { useGame } from '@/context/GameContext';
-import { HardDrive, Wallet, ChevronsUp, ArrowRight, Sparkles, Gamepad2 } from 'lucide-react';
+import { HardDrive, Wallet, ChevronsUp, ArrowRight, Sparkles, Gamepad2, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const BITCOIN_PRICE = 30000; // $30,000 per BTC
@@ -109,6 +111,15 @@ const Index = () => {
               color="purple"
               subtext={`${state.experience}/${state.level * 10} XP`}
             />
+          </div>
+
+          {/* Quests & Achievements Section */}
+          <div className="glass-panel rounded-xl p-4 mt-6">
+            <div className="flex items-center mb-3">
+              <Target className="w-5 h-5 mr-2 text-green-600" />
+              <h2 className="text-lg font-medium">Quests & Achievements</h2>
+            </div>
+            <QuestsAndAchievements />
           </div>
 
           {/* Mini Games Section */}

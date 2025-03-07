@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Clock, Shield } from 'lucide-react';
@@ -31,6 +32,12 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
   const [gameTime, setGameTime] = useState(15); // 15 seconds game
   const [viruses, setViruses] = useState<Virus[]>([]);
   const [bullets, setBullets] = useState<Bullet[]>([]);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  
+  // Image references
+  const bitcoinImgRef = useRef<HTMLImageElement | null>(null);
+  const virusImgRef = useRef<HTMLImageElement | null>(null);
+  const bulletImgRef = useRef<HTMLImageElement | null>(null);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameLoopRef = useRef<number | null>(null);
@@ -41,6 +48,53 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
   const isOnCooldown = now < cooldownEnds;
   const remainingCooldown = Math.ceil((cooldownEnds - now) / 1000);
   
+  // Preload images when component mounts
+  useEffect(() => {
+    const bitcoinImg = new Image();
+    const virusImg = new Image();
+    const bulletImg = new Image();
+    
+    let loadedCount = 0;
+    const totalImages = 3;
+    
+    const handleImageLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) {
+        setImagesLoaded(true);
+      }
+    };
+    
+    const handleImageError = (e: ErrorEvent) => {
+      console.error("Error loading image:", e);
+      // Use fallback rendering (the game will use colored shapes instead)
+    };
+    
+    bitcoinImg.onload = handleImageLoad;
+    virusImg.onload = handleImageLoad;
+    bulletImg.onload = handleImageLoad;
+    
+    bitcoinImg.onerror = handleImageError as any;
+    virusImg.onerror = handleImageError as any;
+    bulletImg.onerror = handleImageError as any;
+    
+    bitcoinImg.src = '/bitcoin.png';
+    virusImg.src = '/virus.png';
+    bulletImg.src = '/coin.png';
+    
+    bitcoinImgRef.current = bitcoinImg;
+    virusImgRef.current = virusImg;
+    bulletImgRef.current = bulletImg;
+    
+    return () => {
+      bitcoinImg.onload = null;
+      virusImg.onload = null;
+      bulletImg.onload = null;
+      bitcoinImg.onerror = null;
+      virusImg.onerror = null;
+      bulletImg.onerror = null;
+    };
+  }, []);
+  
   useEffect(() => {
     if (!isPlaying || !canvasRef.current) return;
     
@@ -50,15 +104,6 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
     
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    
-    const bitcoinImg = new Image();
-    bitcoinImg.src = '/bitcoin.png';
-    
-    const virusImg = new Image();
-    virusImg.src = '/virus.png';
-    
-    const bulletImg = new Image();
-    bulletImg.src = '/coin.png';
     
     const playerWidth = 50;
     const playerHeight = 50;
@@ -83,15 +128,26 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         return;
       }
       
+      // Background
       ctx.fillStyle = '#F8F9FA';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       const playerX = (playerPosition / 100) * (canvas.width - playerWidth);
       const playerY = canvas.height - playerHeight - 10;
       
-      if (bitcoinImg.complete) {
-        ctx.drawImage(bitcoinImg, playerX, playerY, playerWidth, playerHeight);
+      // Draw player (Bitcoin)
+      if (bitcoinImgRef.current && imagesLoaded) {
+        try {
+          ctx.drawImage(bitcoinImgRef.current, playerX, playerY, playerWidth, playerHeight);
+        } catch (error) {
+          // Fallback rendering
+          ctx.fillStyle = '#F7931A';
+          ctx.beginPath();
+          ctx.arc(playerX + playerWidth / 2, playerY + playerHeight / 2, playerWidth / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
       } else {
+        // Fallback rendering
         ctx.fillStyle = '#F7931A';
         ctx.beginPath();
         ctx.arc(playerX + playerWidth / 2, playerY + playerHeight / 2, playerWidth / 2, 0, Math.PI * 2);
@@ -125,10 +181,18 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         return {...virus, y: newY};
       }).filter(virus => virus.active));
       
+      // Draw viruses
       viruses.forEach(virus => {
-        if (virusImg.complete) {
-          ctx.drawImage(virusImg, virus.x, virus.y, virus.width, virus.height);
+        if (virusImgRef.current && imagesLoaded) {
+          try {
+            ctx.drawImage(virusImgRef.current, virus.x, virus.y, virus.width, virus.height);
+          } catch (error) {
+            // Fallback rendering
+            ctx.fillStyle = '#7F00FF';
+            ctx.fillRect(virus.x, virus.y, virus.width, virus.height);
+          }
         } else {
+          // Fallback rendering
           ctx.fillStyle = '#7F00FF';
           ctx.fillRect(virus.x, virus.y, virus.width, virus.height);
         }
@@ -146,10 +210,20 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         return {...bullet, y: newY};
       }).filter(bullet => bullet.active));
       
+      // Draw bullets
       bullets.forEach(bullet => {
-        if (bulletImg.complete) {
-          ctx.drawImage(bulletImg, bullet.x, bullet.y, bullet.width, bullet.height);
+        if (bulletImgRef.current && imagesLoaded) {
+          try {
+            ctx.drawImage(bulletImgRef.current, bullet.x, bullet.y, bullet.width, bullet.height);
+          } catch (error) {
+            // Fallback rendering
+            ctx.fillStyle = '#F7931A';
+            ctx.beginPath();
+            ctx.arc(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2, bullet.width / 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
         } else {
+          // Fallback rendering
           ctx.fillStyle = '#F7931A';
           ctx.beginPath();
           ctx.arc(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2, bullet.width / 2, 0, Math.PI * 2);
@@ -157,6 +231,7 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         }
       });
       
+      // Check for collisions
       bullets.forEach(bullet => {
         viruses.forEach(virus => {
           if (bullet.active && virus.active) {
@@ -174,6 +249,7 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         });
       });
       
+      // Draw HUD
       ctx.fillStyle = '#333';
       ctx.font = '16px Arial';
       ctx.fillText(`Score: ${score}`, 10, 25);
@@ -189,7 +265,7 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         cancelAnimationFrame(gameLoopRef.current);
       }
     };
-  }, [isPlaying, viruses, bullets, playerPosition, score, gameTime]);
+  }, [isPlaying, viruses, bullets, playerPosition, score, gameTime, imagesLoaded]);
   
   useEffect(() => {
     if (!isPlaying) return;
