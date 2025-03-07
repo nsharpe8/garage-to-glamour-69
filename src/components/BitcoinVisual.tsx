@@ -55,27 +55,28 @@ const BitcoinVisual: React.FC = () => {
       canvas.height = canvas.clientHeight;
     };
     
-    // Get color based on hashrate
+    // Get color based on hashrate - more dynamic colors for higher hashrates
     const getHashrateColor = () => {
       if (state.hashrate < 10) return '#f7931a'; // Default bitcoin orange
       if (state.hashrate < 50) return '#3490dc'; // Blue
       if (state.hashrate < 200) return '#8B5CF6'; // Purple
+      if (state.hashrate < 500) return '#D946EF'; // Magenta
       return '#F97316'; // Bright orange for high hashrates
     };
     
-    // Get particle count based on hashrate
+    // Get particle count based on hashrate - more particles for higher hashrates
     const getParticleCount = () => {
-      return Math.min(Math.floor(state.hashrate / 2), 50);
+      return Math.min(Math.floor(state.hashrate / 1.5), 75); // Increased max particles
     };
     
-    // Create particle effect
+    // Create particle effect with more particles and colors
     const createParticles = (x: number, y: number, count: number) => {
-      const colors = ['#f7931a', '#f0ad4e', '#ffc107', '#fd7e14'];
+      const colors = ['#f7931a', '#f0ad4e', '#ffc107', '#fd7e14', '#ffeb3b'];
       
       for (let i = 0; i < count; i++) {
-        const size = Math.random() * 4 + 1;
-        const speedX = (Math.random() - 0.5) * 3;
-        const speedY = (Math.random() - 0.5) * 3;
+        const size = Math.random() * 5 + 1; // Slightly larger particles
+        const speedX = (Math.random() - 0.5) * 4; // Faster movement
+        const speedY = (Math.random() - 0.5) * 4;
         const color = colors[Math.floor(Math.random() * colors.length)];
         particles.push(new Particle(x, y, size, speedX, speedY, color));
       }
@@ -92,12 +93,22 @@ const BitcoinVisual: React.FC = () => {
       
       // Calculate size based on canvas dimensions and hashrate
       const baseSize = Math.min(canvas.width, canvas.height) * 0.4;
-      const sizeBoost = Math.min(state.hashrate / 100, 0.1); // Up to 10% larger based on hashrate
+      const sizeBoost = Math.min(state.hashrate / 100, 0.15); // Up to 15% larger based on hashrate (increased from 10%)
       const size = baseSize * (1 + sizeBoost);
       
       // Update the angle - rotate faster with higher hashrate
-      const rotationSpeed = 0.005 * (1 + Math.min(state.hashrate / 200, 0.5));
+      const rotationSpeed = 0.005 * (1 + Math.min(state.hashrate / 200, 0.7)); // Increased max rotation speed
       angle += rotationSpeed;
+      
+      // Add more particles for higher hashrates
+      if (Math.random() < 0.2 && state.hashrate > 10) {
+        const particleCount = Math.floor(Math.random() * getParticleCount());
+        const angle = Math.random() * Math.PI * 2;
+        const distance = size * 0.8;
+        const particleX = centerX + Math.cos(angle) * distance;
+        const particleY = centerY + Math.sin(angle) * distance;
+        createParticles(particleX, particleY, particleCount);
+      }
       
       // Update and draw particles
       particles.forEach((particle, index) => {
@@ -137,7 +148,7 @@ const BitcoinVisual: React.FC = () => {
       // Draw the highlight - more prominent with higher hashrates
       ctx.beginPath();
       ctx.arc(-size * 0.2, -size * 0.2, size * 0.8, 0, Math.PI * 2);
-      const highlightOpacity = 0.1 + Math.min(state.hashrate / 500, 0.1); // More shine with higher hashrate
+      const highlightOpacity = 0.1 + Math.min(state.hashrate / 400, 0.15); // More shine with higher hashrate (increased from 0.1)
       ctx.fillStyle = `rgba(255, 255, 255, ${highlightOpacity})`;
       ctx.fill();
       
@@ -149,7 +160,7 @@ const BitcoinVisual: React.FC = () => {
       ctx.fillText('₿', 0, 0);
       
       // Create a pulsing effect - more intense with higher hashrates
-      const pulseIntensity = 0.02 + Math.min(state.hashrate / 1000, 0.03);
+      const pulseIntensity = 0.02 + Math.min(state.hashrate / 800, 0.05); // Increased from 0.03
       const pulseScale = 1 + Math.sin(timestamp * 0.001) * pulseIntensity;
       ctx.scale(pulseScale, pulseScale);
       
@@ -161,19 +172,20 @@ const BitcoinVisual: React.FC = () => {
       ctx.fillStyle = hashrateColor;
       ctx.textAlign = 'center';
       
-      // Make hashrate display more visually impressive
+      // Make hashrate display more visually impressive with enhanced animations
       const hashrateText = `${state.hashrate} H/s`;
-      ctx.fillText(hashrateText, centerX, centerY + size + 30);
       
       // Add a subtle glow effect for higher hashrates
-      if (state.hashrate > 20) {
+      if (state.hashrate > 10) {
         ctx.shadowColor = hashrateColor;
-        ctx.shadowBlur = Math.min(state.hashrate / 10, 10);
+        ctx.shadowBlur = Math.min(state.hashrate / 8, 15); // Increased glow for higher hashrates
         ctx.fillText(hashrateText, centerX, centerY + size + 30);
         ctx.shadowBlur = 0;
+      } else {
+        ctx.fillText(hashrateText, centerX, centerY + size + 30);
       }
       
-      // Draw level info
+      // Draw level info with better visuals
       ctx.font = 'bold 16px Inter, sans-serif';
       ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
       ctx.fillText(`LEVEL ${state.level}`, centerX, centerY + size + 60);
@@ -226,23 +238,47 @@ const BitcoinVisual: React.FC = () => {
     
     dispatch({ type: 'MINE_BITCOIN' });
     
-    // Add visual feedback on click
+    // Add enhanced visual feedback on click
     const ctx = canvas.getContext('2d');
     if (ctx) {
       // Create ripple effect at click location
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       
-      // Create a ripple circle
+      // Create a more dramatic ripple circle
       ctx.beginPath();
-      ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(247, 147, 26, 0.3)';
+      ctx.arc(centerX, centerY, 60, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(247, 147, 26, 0.4)';
       ctx.fill();
       
-      // Fade out after animation
+      // Add particle burst on click for better feedback
+      const particleCount = Math.min(20 + Math.floor(state.hashrate / 5), 50);
+      
+      for (let i = 0; i < particleCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1 + Math.random() * 3;
+        const distance = 30 + Math.random() * 20;
+        
+        const x = centerX + Math.cos(angle) * distance;
+        const y = centerY + Math.sin(angle) * distance;
+        
+        const particle = document.createElement('div');
+        particle.className = 'absolute w-2 h-2 rounded-full bg-bitcoin animate-fade-out';
+        particle.style.left = `${x}px`;
+        particle.style.top = `${y}px`;
+        
+        canvas.parentElement?.appendChild(particle);
+        
+        // Remove particle after animation
+        setTimeout(() => {
+          particle.remove();
+        }, 1000);
+      }
+      
+      // Fade out ripple after animation
       setTimeout(() => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }, 100);
+      }, 150);
     }
   };
   

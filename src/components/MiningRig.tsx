@@ -73,6 +73,11 @@ const MiningRig: React.FC<MiningRigProps> = ({ rigId }) => {
                 {isRecentlyBoosted && (
                   <span className="inline-block ml-1 animate-pulse">⚡</span>
                 )}
+                {rig.owned && rig.quantity > 1 && (
+                  <span className="inline-block ml-1 text-xs text-gray-500">
+                    × {rig.quantity} = {rig.hashrate * rig.quantity} H/s
+                  </span>
+                )}
               </span>
               <span className="text-gray-500">
                 {rig.power}W
@@ -100,7 +105,12 @@ const MiningRig: React.FC<MiningRigProps> = ({ rigId }) => {
           {rig.owned && (
             <button
               onClick={handleSell}
-              className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+              className={cn(
+                "p-2 rounded-lg transition-colors",
+                canSell 
+                  ? "bg-red-500/10 text-red-500 hover:bg-red-500/20" 
+                  : "bg-gray-100 text-gray-400"
+              )}
               disabled={!canSell}
             >
               <Minus className="w-4 h-4" />

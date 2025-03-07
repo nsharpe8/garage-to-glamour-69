@@ -46,28 +46,28 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setPreviousHashrate(state.hashrate);
   }, [state.hashrate, previousHashrate]);
 
-  // Passive mining effect - runs every second
+  // Passive mining effect - runs every second with increased rate
   useEffect(() => {
     const miningInterval = setInterval(() => {
       if (state.hashrate > 0) {
         dispatch({ type: 'COLLECT_PASSIVE_INCOME' });
       }
-    }, 1000);
+    }, 500); // Reduced from 1000ms to 500ms for faster passive mining
 
     return () => clearInterval(miningInterval);
   }, [state.hashrate]);
 
-  // Random events effect
+  // Random events effect with increased frequency
   useEffect(() => {
     const eventInterval = setInterval(() => {
       const now = Date.now();
       const timeSinceLastEvent = now - state.lastEventTime;
       
-      // Random events happen every 30-90 seconds
-      if (timeSinceLastEvent > 30000 && Math.random() < 0.1) {
+      // Random events happen every 20-60 seconds (reduced from 30-90)
+      if (timeSinceLastEvent > 20000 && Math.random() < 0.15) { // Increased probability from 0.1 to 0.15
         dispatch({ type: 'TRIGGER_RANDOM_EVENT' });
       }
-    }, 10000);
+    }, 8000); // Reduced from 10000ms to 8000ms
 
     return () => clearInterval(eventInterval);
   }, [state.lastEventTime]);

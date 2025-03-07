@@ -31,55 +31,118 @@ const HashPuzzleGame: React.FC<HashPuzzleGameProps> = ({ game }) => {
   const isOnCooldown = now < cooldownEnds;
   const remainingCooldown = Math.ceil((cooldownEnds - now) / 1000);
   
-  // Generate a random maze
+  // Improved maze generation algorithm
   const generateMaze = () => {
     // Create an empty maze filled with walls
     const newMaze: MazeGrid = Array(MAZE_SIZE).fill(0).map(() => 
       Array(MAZE_SIZE).fill(1)
     );
     
-    // Simple random maze generation algorithm
-    const carvePassage = (x: number, y: number) => {
-      newMaze[y][x] = 0; // Mark as path
+    // Use a modified depth-first search algorithm to create paths
+    const stack: Position[] = [];
+    const visited: boolean[][] = Array(MAZE_SIZE).fill(0).map(() => 
+      Array(MAZE_SIZE).fill(false)
+    );
+    
+    // Start at a random position (can be customized)
+    const startX = 0;
+    const startY = 0;
+    newMaze[startY][startX] = 0;
+    visited[startY][startX] = true;
+    stack.push({ x: startX, y: startY });
+    
+    // Define directions: right, down, left, up
+    const directions = [
+      [1, 0], [0, 1], [-1, 0], [0, -1]
+    ];
+    
+    // Carve paths using DFS
+    while (stack.length > 0) {
+      const current = stack[stack.length - 1];
       
-      // Define directions: right, down, left, up
-      const directions = [
-        [1, 0], [0, 1], [-1, 0], [0, -1]
-      ];
+      // Shuffle directions for randomness
+      const shuffledDirs = [...directions].sort(() => Math.random() - 0.5);
       
-      // Shuffle directions
-      for (let i = directions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [directions[i], directions[j]] = [directions[j], directions[i]];
-      }
+      let foundNext = false;
       
-      // Try each direction
-      for (const [dx, dy] of directions) {
-        const nx = x + dx * 2;
-        const ny = y + dy * 2;
+      for (const [dx, dy] of shuffledDirs) {
+        const nx = current.x + dx * 2;
+        const ny = current.y + dy * 2;
         
-        if (nx >= 0 && nx < MAZE_SIZE && ny >= 0 && ny < MAZE_SIZE && newMaze[ny][nx] === 1) {
-          // Carve passage between current cell and the next cell
-          newMaze[y + dy][x + dx] = 0;
-          carvePassage(nx, ny);
+        if (nx >= 0 && nx < MAZE_SIZE && ny >= 0 && ny < MAZE_SIZE && !visited[ny][nx]) {
+          // Carve path to the next cell
+          newMaze[current.y + dy][current.x + dx] = 0;
+          newMaze[ny][nx] = 0;
+          visited[ny][nx] = true;
+          stack.push({ x: nx, y: ny });
+          foundNext = true;
+          break;
         }
       }
-    };
-    
-    // Start carving from top-left
-    carvePassage(0, 0);
+      
+      // If no unvisited neighbors, backtrack
+      if (!foundNext) {
+        stack.pop();
+      }
+    }
     
     // Ensure start and exit are paths
     newMaze[PLAYER_START.y][PLAYER_START.x] = 0;
     newMaze[EXIT_POSITION.y][EXIT_POSITION.x] = 0;
     
-    // Ensure there's a path to the exit (simple approach: make some random paths)
-    for (let i = 0; i < MAZE_SIZE; i++) {
-      newMaze[Math.floor(Math.random() * MAZE_SIZE)][i] = 0;
-      newMaze[i][Math.floor(Math.random() * MAZE_SIZE)] = 0;
-    }
+    // Ensure there's always a valid path from start to exit
+    ensureValidPath(newMaze);
     
     return newMaze;
+  };
+  
+  // Function to ensure there's always a valid path from start to exit
+  const ensureValidPath = (maze: MazeGrid) => {
+    // Create a simple path along edges if needed
+    const needsPathFix = !isPathExist(maze, PLAYER_START, EXIT_POSITION);
+    
+    if (needsPathFix) {
+      // Create a path along the top and right edges
+      for (let x = 0; x < MAZE_SIZE; x++) {
+        maze[0][x] = 0; // Top row
+      }
+      
+      for (let y = 0; y < MAZE_SIZE; y++) {
+        maze[y][MAZE_SIZE - 1] = 0; // Right column
+      }
+    }
+  };
+  
+  // Check if a path exists using breadth-first search
+  const isPathExist = (maze: MazeGrid, start: Position, end: Position): boolean => {
+    const queue: Position[] = [start];
+    const visited: boolean[][] = Array(MAZE_SIZE).fill(0).map(() => 
+      Array(MAZE_SIZE).fill(false)
+    );
+    visited[start.y][start.x] = true;
+    
+    const directions = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+    
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      
+      if (current.x === end.x && current.y === end.y) {
+        return true;
+      }
+      
+      for (const [dx, dy] of directions) {
+        const nx = current.x + dx;
+        const ny = current.y + dy;
+        
+        if (nx >= 0 && nx < MAZE_SIZE && ny >= 0 && ny < MAZE_SIZE && 
+            maze[ny][nx] === 0 && !visited[ny][nx]) {
+          visited[ny][nx] = true;
+          queue.push({ x: nx, y: ny });
+        }
+      }
+    }
+    
+    return false;
   };
   
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -117,10 +180,10 @@ const HashPuzzleGame: React.FC<HashPuzzleGameProps> = ({ game }) => {
   };
   
   const handleWin = () => {
-    // Calculate reward based on level and some randomness
-    const baseBTC = 0.0001;
-    const randomBonus = Math.random() * 0.0005;
-    const levelMultiplier = 1 + (game.id * 0.2); // Higher multiplier for maze game
+    // Increased rewards for faster progression
+    const baseBTC = 0.0002; // Doubled from 0.0001
+    const randomBonus = Math.random() * 0.001; // Doubled from 0.0005
+    const levelMultiplier = 1 + (game.id * 0.3); // Increased from 0.2
     const reward = (baseBTC + randomBonus) * levelMultiplier;
     
     setEarnedReward(reward);
@@ -139,7 +202,9 @@ const HashPuzzleGame: React.FC<HashPuzzleGameProps> = ({ game }) => {
   const startGame = () => {
     if (isOnCooldown || isPlaying) return;
     
-    setMaze(generateMaze());
+    // Generate a new maze each time
+    const newMaze = generateMaze();
+    setMaze(newMaze);
     setPlayerPosition(PLAYER_START);
     setGameCompleted(false);
     setIsPlaying(true);
@@ -170,6 +235,7 @@ const HashPuzzleGame: React.FC<HashPuzzleGameProps> = ({ game }) => {
           row.map((cell, x) => {
             const isPlayer = playerPosition.x === x && playerPosition.y === y;
             const isExit = EXIT_POSITION.x === x && EXIT_POSITION.y === y;
+            const isStart = PLAYER_START.x === x && PLAYER_START.y === y && !isPlayer;
             
             return (
               <div 
@@ -177,14 +243,16 @@ const HashPuzzleGame: React.FC<HashPuzzleGameProps> = ({ game }) => {
                 className={cn(
                   "w-9 h-9 flex items-center justify-center",
                   cell === 1 ? "bg-gray-800" : "bg-white border border-gray-200",
-                  isPlayer && "bg-bitcoin",
-                  isExit && !isPlayer && "bg-green-100"
+                  isPlayer && "bg-bitcoin animate-pulse",
+                  isExit && !isPlayer && "bg-green-100",
+                  isStart && "bg-blue-100"
                 )}
               >
                 {isPlayer && <Navigation className="w-5 h-5 text-white" />}
                 {isExit && !isPlayer && <Flag className="w-5 h-5 text-green-600" />}
-                {!isPlayer && !isExit && cell === 0 && (x + y) % 3 === 0 && (
-                  <MapPin className="w-3 h-3 text-gray-300" />
+                {isStart && !isPlayer && <MapPin className="w-5 h-5 text-blue-600" />}
+                {!isPlayer && !isExit && !isStart && cell === 0 && (x + y) % 4 === 0 && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
                 )}
               </div>
             );
@@ -204,7 +272,7 @@ const HashPuzzleGame: React.FC<HashPuzzleGameProps> = ({ game }) => {
       ) : isPlaying ? (
         <div className="mb-2">
           {gameCompleted ? (
-            <div className="text-center py-2">
+            <div className="text-center py-2 animate-fade-in">
               <div className="text-green-600 font-medium mb-2">
                 You earned {formatBitcoin(earnedReward)} BTC!
               </div>
