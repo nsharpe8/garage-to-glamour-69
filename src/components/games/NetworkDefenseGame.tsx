@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Clock, Shield } from 'lucide-react';
@@ -42,7 +41,6 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
   const isOnCooldown = now < cooldownEnds;
   const remainingCooldown = Math.ceil((cooldownEnds - now) / 1000);
   
-  // Game loop and rendering
   useEffect(() => {
     if (!isPlaying || !canvasRef.current) return;
     
@@ -50,21 +48,18 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Set canvas dimensions
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
     
-    // Load images
     const bitcoinImg = new Image();
-    bitcoinImg.src = '/bitcoin.png'; // Make sure this file exists in public folder
+    bitcoinImg.src = '/bitcoin.png';
     
     const virusImg = new Image();
-    virusImg.src = '/virus.png'; // Make sure this file exists in public folder
+    virusImg.src = '/virus.png';
     
     const bulletImg = new Image();
-    bulletImg.src = '/coin.png'; // Make sure this file exists in public folder
+    bulletImg.src = '/coin.png';
     
-    // Game constants
     const playerWidth = 50;
     const playerHeight = 50;
     const virusWidth = 30;
@@ -74,51 +69,43 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
     
     let startTime = Date.now();
     
-    // Game loop
     const gameLoop = () => {
       if (!ctx) return;
       
-      // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Update game time
       const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
       const remainingTime = Math.max(0, gameTime - elapsedSeconds);
       setGameTime(remainingTime);
       
       if (remainingTime <= 0) {
-        // End game
         endGame();
         return;
       }
       
-      // Draw background
       ctx.fillStyle = '#F8F9FA';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Draw player (Bitcoin)
       const playerX = (playerPosition / 100) * (canvas.width - playerWidth);
       const playerY = canvas.height - playerHeight - 10;
       
       if (bitcoinImg.complete) {
         ctx.drawImage(bitcoinImg, playerX, playerY, playerWidth, playerHeight);
       } else {
-        // Fallback if image not loaded
         ctx.fillStyle = '#F7931A';
         ctx.beginPath();
         ctx.arc(playerX + playerWidth / 2, playerY + playerHeight / 2, playerWidth / 2, 0, Math.PI * 2);
         ctx.fill();
       }
       
-      // Spawn new viruses
       const currentTime = Date.now();
-      if (currentTime - lastSpawnRef.current > 800) { // Spawn every 800ms
+      if (currentTime - lastSpawnRef.current > 800) {
         const newVirus: Virus = {
           x: Math.random() * (canvas.width - virusWidth),
           y: -virusHeight,
           width: virusWidth,
           height: virusHeight,
-          speed: 2 + Math.random() * 2, // Random speed between 2-4
+          speed: 2 + Math.random() * 2,
           active: true
         };
         
@@ -126,13 +113,11 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         lastSpawnRef.current = currentTime;
       }
       
-      // Update viruses
       setViruses(prev => prev.map(virus => {
         if (!virus.active) return virus;
         
         const newY = virus.y + virus.speed;
         
-        // Check if virus hits the bottom
         if (newY > canvas.height) {
           return {...virus, active: false};
         }
@@ -140,24 +125,20 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         return {...virus, y: newY};
       }).filter(virus => virus.active));
       
-      // Draw viruses
       viruses.forEach(virus => {
         if (virusImg.complete) {
           ctx.drawImage(virusImg, virus.x, virus.y, virus.width, virus.height);
         } else {
-          // Fallback
           ctx.fillStyle = '#7F00FF';
           ctx.fillRect(virus.x, virus.y, virus.width, virus.height);
         }
       });
       
-      // Update bullets
       setBullets(prev => prev.map(bullet => {
         if (!bullet.active) return bullet;
         
         const newY = bullet.y - bullet.speed;
         
-        // Check if bullet goes off screen
         if (newY < -bulletHeight) {
           return {...bullet, active: false};
         }
@@ -165,12 +146,10 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         return {...bullet, y: newY};
       }).filter(bullet => bullet.active));
       
-      // Draw bullets
       bullets.forEach(bullet => {
         if (bulletImg.complete) {
           ctx.drawImage(bulletImg, bullet.x, bullet.y, bullet.width, bullet.height);
         } else {
-          // Fallback
           ctx.fillStyle = '#F7931A';
           ctx.beginPath();
           ctx.arc(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2, bullet.width / 2, 0, Math.PI * 2);
@@ -178,18 +157,15 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         }
       });
       
-      // Check collisions
       bullets.forEach(bullet => {
         viruses.forEach(virus => {
           if (bullet.active && virus.active) {
-            // Simple collision detection
             if (
               bullet.x < virus.x + virus.width &&
               bullet.x + bullet.width > virus.x &&
               bullet.y < virus.y + virus.height &&
               bullet.y + bullet.height > virus.y
             ) {
-              // Collision detected
               bullet.active = false;
               virus.active = false;
               setScore(prev => prev + 10);
@@ -198,19 +174,16 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         });
       });
       
-      // Draw score and time
       ctx.fillStyle = '#333';
       ctx.font = '16px Arial';
       ctx.fillText(`Score: ${score}`, 10, 25);
       ctx.fillText(`Time: ${remainingTime}s`, canvas.width - 100, 25);
       
-      // Continue loop
       gameLoopRef.current = requestAnimationFrame(gameLoop);
     };
     
     gameLoopRef.current = requestAnimationFrame(gameLoop);
     
-    // Cleanup
     return () => {
       if (gameLoopRef.current) {
         cancelAnimationFrame(gameLoopRef.current);
@@ -218,7 +191,6 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
     };
   }, [isPlaying, viruses, bullets, playerPosition, score, gameTime]);
   
-  // Player movement with keyboard
   useEffect(() => {
     if (!isPlaying) return;
     
@@ -228,7 +200,6 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
       } else if (e.key === 'ArrowRight') {
         setPlayerPosition(prev => Math.min(100, prev + 5));
       } else if (e.key === ' ' || e.key === 'ArrowUp') {
-        // Fire bullet on spacebar or up arrow
         fireBullet();
       }
     };
@@ -239,7 +210,6 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
     };
   }, [isPlaying]);
   
-  // Touch events for mobile
   useEffect(() => {
     if (!isPlaying || !canvasRef.current) return;
     
@@ -256,7 +226,6 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
     
     const handleTouchStart = (e: TouchEvent) => {
       handleTouchMove(e);
-      // Also fire a bullet on touch
       fireBullet();
     };
     
@@ -317,9 +286,8 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
     
     setGameCompleted(true);
     
-    // Calculate reward based on score
     const baseBTC = 0.0001;
-    const scoreMultiplier = score / 100; // Every 100 points = 0.0001 BTC
+    const scoreMultiplier = score / 100;
     const reward = baseBTC + (scoreMultiplier * 0.0001);
     
     setEarnedReward(reward);
@@ -350,7 +318,6 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
             className="w-full h-full rounded-md bg-white"
           />
           
-          {/* Mobile controls */}
           <div className="sm:hidden flex w-full absolute bottom-0 p-2 justify-between">
             <Button
               variant="outline" 

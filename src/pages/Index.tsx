@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -120,11 +119,9 @@ const Index = () => {
             </div>
             
             <div className="space-y-4">
-              {state.miniGames
-                .filter(game => game.id <= state.level + 1) // Only show games unlocked based on level
-                .map(game => (
-                  <MiniGame key={game.id} gameId={game.id} />
-                ))}
+              {state.miniGames.map(game => (
+                <MiniGame key={game.id} gameId={game.id} />
+              ))}
             </div>
           </div>
 
