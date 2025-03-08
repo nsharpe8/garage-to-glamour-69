@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Clock, Shield } from 'lucide-react';
@@ -95,6 +94,11 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
     };
   }, []);
   
+  // Update the quest progress for virus hunting - moved outside the game loop to fix invalid hook call
+  const updateVirusHunterQuestRef = useRef((score: number) => {
+    // Don't do anything here - actual implementation is in the component body
+  });
+  
   useEffect(() => {
     if (!isPlaying || !canvasRef.current) return;
     
@@ -113,6 +117,19 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
     const bulletHeight = 15;
     
     let startTime = Date.now();
+    
+    // Set the actual quest update function here where the hook is valid
+    updateVirusHunterQuestRef.current = (currentScore: number) => {
+      const virusHunterQuest = 3; // ID of the virus hunter quest
+      const { dispatch } = useGame();
+      dispatch({ 
+        type: 'UPDATE_QUEST_PROGRESS', 
+        payload: { 
+          id: virusHunterQuest, 
+          progress: currentScore / 10 // Each virus is worth 10 points
+        } 
+      });
+    };
     
     const gameLoop = () => {
       if (!ctx) return;
@@ -298,8 +315,8 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
               
               // Update the relevant quest progress
               if (score % 50 === 0) {
-                // Only update when actually hitting a milestone to avoid too many updates
-                updateVirusHunterQuest();
+                // Call the ref function instead of direct hook
+                updateVirusHunterQuestRef.current(score);
               }
             }
           }
@@ -346,21 +363,7 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         cancelAnimationFrame(gameLoopRef.current);
       }
     };
-  }, [isPlaying, viruses, bullets, playerPosition, score, gameTime, imagesLoaded]);
-  
-  // Update the quest progress for virus hunting
-  const updateVirusHunterQuest = () => {
-    const virusHunterQuest = 3; // ID of the virus hunter quest
-    const { dispatch } = useGame();
-    
-    dispatch({ 
-      type: 'UPDATE_QUEST_PROGRESS', 
-      payload: { 
-        id: virusHunterQuest, 
-        progress: score / 10 // Each virus is worth 10 points
-      } 
-    });
-  };
+  }, [isPlaying, viruses, bullets, playerPosition, score, gameTime, imagesLoaded, dispatch]);
   
   // Mouse tracking for player movement
   useEffect(() => {
@@ -425,7 +428,7 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
     const bulletWidth = 15;
     const bulletHeight = 15;
     
-    // Calculate the exact player position in pixels
+    // Get the current player position
     const playerX = (playerPosition.x / 100) * (canvas.width - playerWidth);
     const playerY = canvas.height - playerHeight - 10;
     
