@@ -155,6 +155,7 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
         ctx.stroke();
       }
       
+      // Calculate the player's actual pixel position based on percentage
       const playerX = (playerPosition.x / 100) * (canvas.width - playerWidth);
       const playerY = canvas.height - playerHeight - 10;
       
@@ -424,22 +425,24 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
     const bulletWidth = 15;
     const bulletHeight = 15;
     
+    // Calculate the exact player position in pixels
     const playerX = (playerPosition.x / 100) * (canvas.width - playerWidth);
     const playerY = canvas.height - playerHeight - 10;
     
-    // Fix projectile alignment to match player position
+    // Calculate the center of the bitcoin
+    const bitcoinCenterX = playerX + (playerWidth / 2);
+    
+    // Create a new bullet exactly at the center of the bitcoin
     const newBullet: Bullet = {
-      x: playerX + (playerWidth / 2) - (bulletWidth / 2), // Center the bullet with player
+      x: bitcoinCenterX - (bulletWidth / 2), // This ensures bullet is centered with the player
       y: playerY, // Start at top of player
       width: bulletWidth,
       height: bulletHeight,
-      speed: 6, // Slightly faster bullet
+      speed: 6,
       active: true
     };
     
     setBullets(prev => [...prev, newBullet]);
-    
-    // Add sound effect (not implemented but could be a future enhancement)
   };
   
   const startGame = () => {
