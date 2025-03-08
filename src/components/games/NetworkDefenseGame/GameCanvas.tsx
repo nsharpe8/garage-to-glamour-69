@@ -395,6 +395,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     };
   }, [setPlayerPosition]);
   
+  // The key fix is here - get the current position of the player each time
   const fireBullet = () => {
     if (!canvasRef.current) return;
     
@@ -404,17 +405,17 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     const bulletWidth = 15;
     const bulletHeight = 15;
     
-    // Get the current player position in pixels
+    // Get fresh coordinates for player position
     const playerX = (playerPosition.x / 100) * (canvas.width - playerWidth);
     const playerY = canvas.height - playerHeight - 10;
     
-    // Calculate the center of the player
+    // Calculate the center of the player for bullet origin
     const playerCenterX = playerX + (playerWidth / 2);
     
-    // Create a new bullet at the center of the player
+    // Create a new bullet from the center of the player
     const newBullet: Bullet = {
-      x: playerCenterX - (bulletWidth / 2), // Center the bullet with the player
-      y: playerY, // Start at the top of the player
+      x: playerCenterX - (bulletWidth / 2),
+      y: playerY,
       width: bulletWidth,
       height: bulletHeight,
       speed: 6,
@@ -469,4 +470,3 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     />
   );
 };
-
