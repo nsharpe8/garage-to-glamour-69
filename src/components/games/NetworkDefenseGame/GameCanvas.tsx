@@ -404,17 +404,17 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     const bulletWidth = 15;
     const bulletHeight = 15;
     
-    // Get the current player position
+    // Get the current player position in pixels
     const playerX = (playerPosition.x / 100) * (canvas.width - playerWidth);
     const playerY = canvas.height - playerHeight - 10;
     
-    // Calculate the center of the bitcoin
-    const bitcoinCenterX = playerX + (playerWidth / 2);
+    // Calculate the center of the player
+    const playerCenterX = playerX + (playerWidth / 2);
     
-    // Create a new bullet exactly at the center of the bitcoin
+    // Create a new bullet at the center of the player
     const newBullet: Bullet = {
-      x: bitcoinCenterX - (bulletWidth / 2), // This ensures bullet is centered with the player
-      y: playerY, // Start at top of player
+      x: playerCenterX - (bulletWidth / 2), // Center the bullet with the player
+      y: playerY, // Start at the top of the player
       width: bulletWidth,
       height: bulletHeight,
       speed: 6,
@@ -469,3 +469,4 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     />
   );
 };
+

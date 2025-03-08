@@ -1,13 +1,13 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Clock, Shield } from 'lucide-react';
 import { MiniGame as MiniGameType } from '@/types/gameTypes';
 import { toast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
 import { GameCanvas } from './NetworkDefenseGame/GameCanvas';
 import { GameHUD } from './NetworkDefenseGame/GameHUD';
 import { GameOverScreen } from './NetworkDefenseGame/GameOverScreen';
+import { Virus, Bullet } from './NetworkDefenseGame/types';
 
 interface NetworkDefenseGameProps {
   game: MiniGameType;
@@ -21,8 +21,8 @@ const NetworkDefenseGame: React.FC<NetworkDefenseGameProps> = ({ game }) => {
   const [playerPosition, setPlayerPosition] = useState({ x: 50, y: 0 });
   const [score, setScore] = useState(0);
   const [gameTime, setGameTime] = useState(15); // 15 seconds game
-  const [viruses, setViruses] = useState([]);
-  const [bullets, setBullets] = useState([]);
+  const [viruses, setViruses] = useState<Virus[]>([]);
+  const [bullets, setBullets] = useState<Bullet[]>([]);
   
   const now = Date.now();
   const cooldownEnds = game.lastPlayed + (game.cooldown * 1000);
