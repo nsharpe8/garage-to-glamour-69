@@ -20,6 +20,7 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
   const gameLoopRef = useRef<number | null>(null);
   const lastSpawnRef = useRef<number>(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const playerPositionRef = useRef(playerPosition);
   
   // Image references
   const bitcoinImgRef = useRef<HTMLImageElement | null>(null);
@@ -27,6 +28,11 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
   const bulletImgRef = useRef<HTMLImageElement | null>(null);
   
   const TOTAL_GAME_TIME = 15; // 15 seconds game
+  
+  // Update the ref when playerPosition changes
+  useEffect(() => {
+    playerPositionRef.current = playerPosition;
+  }, [playerPosition]);
   
   // Preload images when component mounts
   useEffect(() => {
@@ -395,7 +401,6 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     };
   }, [setPlayerPosition]);
   
-  // The key fix is here - get the current position of the player each time
   const fireBullet = () => {
     if (!canvasRef.current) return;
     
@@ -405,11 +410,14 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
     const bulletWidth = 15;
     const bulletHeight = 15;
     
-    // Get fresh coordinates for player position
-    const playerX = (playerPosition.x / 100) * (canvas.width - playerWidth);
+    // Use the CURRENT player position from ref instead of potentially stale prop
+    const currentPlayerPosition = playerPositionRef.current;
+    
+    // Calculate accurate player position in pixels
+    const playerX = (currentPlayerPosition.x / 100) * (canvas.width - playerWidth);
     const playerY = canvas.height - playerHeight - 10;
     
-    // Calculate the center of the player for bullet origin
+    // Calculate the center of the player
     const playerCenterX = playerX + (playerWidth / 2);
     
     // Create a new bullet from the center of the player
